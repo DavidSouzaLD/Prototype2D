@@ -5,10 +5,13 @@ using UnityEngine;
 [RequireComponent(typeof(InputClass))]
 public class Controller2D : MonoBehaviour
 {
+    // Variables
     [Header("Movement")]
     [SerializeField] private float targetSpeed;
     [SerializeField] private float frictionAmount;
     [SerializeField] private float acceleration, decceleration;
+    [SerializeField] private float gravityScale;
+    [SerializeField] private float fallGravityMultiplier;
     [Space]
     [SerializeField, Range(.5f, 2f)] private float accelPower;
     [SerializeField, Range(.5f, 2f)] private float stopPower;
@@ -21,13 +24,15 @@ public class Controller2D : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private BaseCheck groundCheck;
 
+    // Bools
     bool isGrounded => groundCheck.IsActive();
+    bool isJumping;
 
-    public bool isJumping;
-
+    // Floats
     float jumpCoutdown = 0.1f;
     float jumpTimer = 0f;
 
+    // Components
     Rigidbody2D Body2D;
     CapsuleCollider2D BoxCol2D;
     InputClass Input;
@@ -40,6 +45,18 @@ public class Controller2D : MonoBehaviour
     }
 
     private void FixedUpdate()
+    {
+        Movement();
+        Friction();
+    }
+
+    private void Update()
+    {
+        Jump();
+        JumpGravity();
+    }
+
+    private void Movement()
     {
         // Movement
         Vector2 _moveAxis = Input.MoveAxis();
@@ -63,9 +80,14 @@ public class Controller2D : MonoBehaviour
 
         Vector2 _currentVelocity = new Vector2(Mathf.Pow(Mathf.Abs(_speedDif) * _accelRate, _velPower) * Mathf.Sign(_speedDif), 0);
         Move(_currentVelocity);
+    }
 
+    private void Friction()
+    {
         // Friction
-        if (isGrounded && Mathf.Abs(_moveAxis.x) < 0.01f)
+        float _moveAxisX = Input.MoveAxis().x;
+
+        if (isGrounded && Mathf.Abs(_moveAxisX) < 0.01f)
         {
             float _amount = Mathf.Min(Mathf.Abs(Body2D.velocity.x), Mathf.Abs(frictionAmount));
             _amount *= Mathf.Sign(Body2D.velocity.x);
@@ -73,7 +95,7 @@ public class Controller2D : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void Jump()
     {
         // Jump
         bool _canJump = isGrounded && jumpTimer <= 0;
@@ -96,6 +118,19 @@ public class Controller2D : MonoBehaviour
         if (jumpTimer >= 0)
         {
             jumpTimer -= Time.deltaTime;
+        }
+    }
+
+    private void JumpGravity()
+    {
+        // Jump Gravity
+        if (Body2D.velocity.y < 0)
+        {
+            Body2D.gravityScale = gravityScale * fallGravityMultiplier;
+        }
+        else
+        {
+            Body2D.gravityScale = gravityScale;
         }
     }
 
