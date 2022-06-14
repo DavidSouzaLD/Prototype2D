@@ -16,7 +16,7 @@ public class Controller2D : MonoBehaviour
 
     [Header("Jump")]
     [SerializeField] private float jumpForce;
-    [SerializeField, Range(.1f, 2f)] private float jumpCutMultiplier;
+    [SerializeField] private float jumpCutMultiplier;
 
     [Header("Settings")]
     [SerializeField] private BaseCheck groundCheck;
@@ -86,9 +86,9 @@ public class Controller2D : MonoBehaviour
             isJumping = true;
         }
 
-        if (!_keyJump && isJumping)
+        if (Body2D.velocity.y > 0 && !_keyJump && isJumping)
         {
-            Move(Vector2.down * (jumpForce * jumpCutMultiplier), ForceMode2D.Impulse);
+            Move(Vector2.up * Body2D.velocity.y * (1 - jumpCutMultiplier), ForceMode2D.Impulse);
             Debug.Log("test");
             isJumping = false;
         }
