@@ -8,20 +8,22 @@ public class Controller2D : MonoBehaviour
     // Variables
     [Header("Movement")]
     [SerializeField] private float targetSpeed;
-    [SerializeField] private float frictionAmount;
     [SerializeField] private float acceleration, decceleration;
-    [SerializeField] private float gravityScale;
-    [SerializeField] private float fallGravityMultiplier;
     [Space]
     [SerializeField, Range(.5f, 2f)] private float accelPower;
     [SerializeField, Range(.5f, 2f)] private float stopPower;
     [SerializeField, Range(.5f, 2f)] private float turnPower;
+    [SerializeField, Range(.1f, 10f)] private float frictionPower;
 
     [Header("Jump")]
     [SerializeField] private float jumpForce;
     [SerializeField] private float jumpCutMultiplier;
 
-    [Header("Settings")]
+    [Header("Gravity")]
+    [SerializeField] private float gravityScale;
+    [SerializeField] private float fallGravityMultiplier;
+
+    [Header("Extra Settings")]
     [SerializeField] private BaseCheck groundCheck;
 
     // Bools
@@ -60,10 +62,12 @@ public class Controller2D : MonoBehaviour
     {
         // Movement
         Vector2 _moveAxis = Input.MoveAxis();
-        float _targetSpeed = targetSpeed * _moveAxis.x;
-        float _speedDif = _targetSpeed - Body2D.velocity.x;
-        float _accelRate = ((Mathf.Abs(_targetSpeed) > 0.01f) ? acceleration : decceleration);
-        float _velPower;
+
+        float _targetSpeed, _speedDif, _accelRate, _velPower;
+
+        _targetSpeed = targetSpeed * _moveAxis.x;
+        _speedDif = _targetSpeed - Body2D.velocity.x;
+        _accelRate = ((Mathf.Abs(_targetSpeed) > 0.01f) ? acceleration : decceleration);
 
         if (Mathf.Abs(_targetSpeed) < 0.01f)
         {
@@ -89,33 +93,37 @@ public class Controller2D : MonoBehaviour
 
         if (isGrounded && Mathf.Abs(_moveAxisX) < 0.01f)
         {
-            float _amount = Mathf.Min(Mathf.Abs(Body2D.velocity.x), Mathf.Abs(frictionAmount));
+            float _amount = Mathf.Min(Mathf.Abs(Body2D.velocity.x), Mathf.Abs(10f));
             _amount *= Mathf.Sign(Body2D.velocity.x);
-            Body2D.AddForce(Vector2.right * -_amount, ForceMode2D.Impulse);
+            Body2D.AddForce(Vector2.right * -_amount * frictionPower, ForceMode2D.Impulse);
         }
     }
 
     private void Jump()
     {
         // Jump
-        bool _canJump = isGrounded && jumpTimer <= 0;
-        bool _keyJump = Input.Jump();
+        bool _canJump, _keyJump, _canCutJump, _startJump, _canUpdateJumpTimer;
 
-        if (_keyJump && _canJump)
+        _canJump = isGrounded && jumpTimer <= 0;
+        _keyJump = Input.Jump();
+        _canCutJump = Body2D.velocity.y > 0 && !_keyJump && isJumping;
+        _startJump = _keyJump && _canJump;
+        _canUpdateJumpTimer = jumpTimer >= 0;
+
+        if (_startJump)
         {
             Body2D.velocity += Vector2.up * jumpForce;
             jumpTimer = jumpCoutdown;
             isJumping = true;
         }
 
-        if (Body2D.velocity.y > 0 && !_keyJump && isJumping)
+        if (_canCutJump)
         {
             Move(Vector2.up * Body2D.velocity.y * (1 - jumpCutMultiplier), ForceMode2D.Impulse);
-            Debug.Log("test");
             isJumping = false;
         }
 
-        if (jumpTimer >= 0)
+        if (_canUpdateJumpTimer)
         {
             jumpTimer -= Time.deltaTime;
         }
