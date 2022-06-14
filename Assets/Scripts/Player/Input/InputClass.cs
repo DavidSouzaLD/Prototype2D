@@ -16,6 +16,7 @@ public class InputClass : MonoBehaviour
 
     public Vector2 MoveAxis() => Map.Player.MoveAxis.ReadValue<Vector2>();
     public bool Jump() => Map.Player.Jump.ReadValue<float>() != 0;
+    public bool Attack() => Map.Player.Attack.ReadValue<float>() != 0;
 
     #endregion
 }
