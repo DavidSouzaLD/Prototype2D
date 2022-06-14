@@ -29,6 +29,7 @@ public class Controller2D : MonoBehaviour
     // Bools
     bool isGrounded => groundCheck.IsActive();
     bool isJumping;
+    bool lockHoldPressJumps;
 
     // Floats
     float jumpCoutdown = 0.1f;
@@ -107,13 +108,15 @@ public class Controller2D : MonoBehaviour
         _canJump = isGrounded && jumpTimer <= 0;
         _keyJump = Input.Jump();
         _canCutJump = Body2D.velocity.y > 0 && !_keyJump && isJumping;
-        _startJump = _keyJump && _canJump;
+        _startJump = _keyJump && _canJump && !lockHoldPressJumps;
         _canUpdateJumpTimer = jumpTimer >= 0;
 
         if (_startJump)
         {
             Body2D.velocity += Vector2.up * jumpForce;
             jumpTimer = jumpCoutdown;
+
+            lockHoldPressJumps = true;
             isJumping = true;
         }
 
@@ -126,6 +129,11 @@ public class Controller2D : MonoBehaviour
         if (_canUpdateJumpTimer)
         {
             jumpTimer -= Time.deltaTime;
+        }
+
+        if (!_keyJump && isGrounded)
+        {
+            lockHoldPressJumps = false;
         }
     }
 
