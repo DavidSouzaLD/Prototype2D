@@ -103,13 +103,14 @@ public class Controller2D : MonoBehaviour
     private void Jump()
     {
         // Jump
-        bool _canJump, _keyJump, _canCutJump, _startJump, _canUpdateJumpTimer;
+        bool _canJump, _keyJump, _cutJump, _startJump, _jumpTimer, _resetHoldPress;
 
         _canJump = isGrounded && jumpTimer <= 0;
         _keyJump = Input.Jump();
-        _canCutJump = Body2D.velocity.y > 0 && !_keyJump && isJumping;
+        _cutJump = Body2D.velocity.y > 0 && !_keyJump && isJumping;
         _startJump = _keyJump && _canJump && !lockHoldPressJumps;
-        _canUpdateJumpTimer = jumpTimer >= 0;
+        _jumpTimer = jumpTimer >= 0;
+        _resetHoldPress = !_keyJump && isGrounded;
 
         if (_startJump)
         {
@@ -120,18 +121,18 @@ public class Controller2D : MonoBehaviour
             isJumping = true;
         }
 
-        if (_canCutJump)
+        if (_cutJump)
         {
             Move(Vector2.up * Body2D.velocity.y * (1 - jumpCutMultiplier), ForceMode2D.Impulse);
             isJumping = false;
         }
 
-        if (_canUpdateJumpTimer)
+        if (_jumpTimer)
         {
             jumpTimer -= Time.deltaTime;
         }
 
-        if (!_keyJump && isGrounded)
+        if (_resetHoldPress)
         {
             lockHoldPressJumps = false;
         }
