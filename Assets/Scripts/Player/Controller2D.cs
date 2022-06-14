@@ -1,13 +1,13 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-[RequireComponent(typeof(BoxCollider2D))]
-[RequireComponent(typeof(CircleCollider2D))]
+[RequireComponent(typeof(CapsuleCollider2D))]
 [RequireComponent(typeof(InputClass))]
 public class Controller2D : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float targetSpeed;
+    [SerializeField] private float frictionAmount;
     [SerializeField] private float acceleration, decceleration;
     [Space]
     [SerializeField, Range(.5f, 2f)] private float accelPower;
@@ -29,15 +29,13 @@ public class Controller2D : MonoBehaviour
     float jumpTimer = 0f;
 
     Rigidbody2D Body2D;
-    BoxCollider2D BoxCol2D;
-    CircleCollider2D CircleCol2D;
+    CapsuleCollider2D BoxCol2D;
     InputClass Input;
 
     private void Start()
     {
         Body2D = GetComponent<Rigidbody2D>();
-        BoxCol2D = GetComponent<BoxCollider2D>();
-        CircleCol2D = GetComponent<CircleCollider2D>();
+        BoxCol2D = GetComponent<CapsuleCollider2D>();
         Input = GetComponent<InputClass>();
     }
 
@@ -65,6 +63,14 @@ public class Controller2D : MonoBehaviour
 
         Vector2 _currentVelocity = new Vector2(Mathf.Pow(Mathf.Abs(_speedDif) * _accelRate, _velPower) * Mathf.Sign(_speedDif), 0);
         Move(_currentVelocity);
+
+        // Friction
+        if (isGrounded && Mathf.Abs(_moveAxis.x) < 0.01f)
+        {
+            float _amount = Mathf.Min(Mathf.Abs(Body2D.velocity.x), Mathf.Abs(frictionAmount));
+            _amount *= Mathf.Sign(Body2D.velocity.x);
+            Body2D.AddForce(Vector2.right * -_amount, ForceMode2D.Impulse);
+        }
     }
 
     private void Update()
@@ -75,7 +81,7 @@ public class Controller2D : MonoBehaviour
 
         if (_keyJump && _canJump)
         {
-            Move(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            Body2D.velocity += Vector2.up * jumpForce;
             jumpTimer = jumpCoutdown;
             isJumping = true;
         }
