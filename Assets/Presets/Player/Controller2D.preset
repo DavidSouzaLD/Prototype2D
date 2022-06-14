@@ -30,7 +30,7 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: acceleration
-    value: 10
+    value: 15
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: decceleration
@@ -50,7 +50,7 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: frictionPower
-    value: 1
+    value: 5
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: jumpForce

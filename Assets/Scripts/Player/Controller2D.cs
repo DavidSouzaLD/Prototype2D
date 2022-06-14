@@ -7,8 +7,9 @@ public class Controller2D : MonoBehaviour
 {
     // Variables
     [Header("Movement")]
-    [SerializeField] private float targetSpeed;
-    [SerializeField] private float acceleration, decceleration;
+    [SerializeField, Range(.5f, 15f)] private float targetSpeed;
+    [SerializeField, Range(.5f, 30f)] private float acceleration;
+    [SerializeField, Range(.1f, 10f)] private float decceleration;
     [Space]
     [SerializeField, Range(.5f, 2f)] private float accelPower;
     [SerializeField, Range(.5f, 2f)] private float stopPower;
@@ -30,6 +31,7 @@ public class Controller2D : MonoBehaviour
     bool isGrounded => groundCheck.IsActive();
     bool isJumping;
     bool lockHoldPressJumps;
+    bool facingRight;
 
     // Floats
     float jumpCoutdown = 0.1f;
@@ -49,17 +51,15 @@ public class Controller2D : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Movement();
-        Friction();
+        UpdateMovement();
     }
 
     private void Update()
     {
-        Jump();
-        JumpGravity();
+        UpdateJump();
     }
 
-    private void Movement()
+    private void UpdateMovement()
     {
         // Movement
         Vector2 _moveAxis = Input.MoveAxis();
@@ -84,23 +84,24 @@ public class Controller2D : MonoBehaviour
         }
 
         Vector2 _currentVelocity = new Vector2(Mathf.Pow(Mathf.Abs(_speedDif) * _accelRate, _velPower) * Mathf.Sign(_speedDif), 0);
-        Move(_currentVelocity);
-    }
+        Body2D.AddForce(_currentVelocity);
 
-    private void Friction()
-    {
         // Friction
-        float _moveAxisX = Input.MoveAxis().x;
-
-        if (isGrounded && Mathf.Abs(_moveAxisX) < 0.01f)
+        if (isGrounded && Mathf.Abs(_moveAxis.x) < 0.01f)
         {
             float _amount = Mathf.Min(Mathf.Abs(Body2D.velocity.x), Mathf.Abs(10f));
             _amount *= Mathf.Sign(Body2D.velocity.x);
             Body2D.AddForce(Vector2.right * -_amount * frictionPower, ForceMode2D.Impulse);
         }
+
+        // Turn
+        if (_moveAxis.x != 0)
+        {
+            Turn(_moveAxis.x < 0);
+        }
     }
 
-    private void Jump()
+    private void UpdateJump()
     {
         // Jump
         bool _canJump, _keyJump, _cutJump, _startJump, _jumpTimer, _resetHoldPress;
@@ -123,7 +124,7 @@ public class Controller2D : MonoBehaviour
 
         if (_cutJump)
         {
-            Move(Vector2.up * Body2D.velocity.y * (1 - jumpCutMultiplier), ForceMode2D.Impulse);
+            Body2D.AddForce(Vector2.up * Body2D.velocity.y * (1 - jumpCutMultiplier), ForceMode2D.Impulse);
             isJumping = false;
         }
 
@@ -136,10 +137,7 @@ public class Controller2D : MonoBehaviour
         {
             lockHoldPressJumps = false;
         }
-    }
 
-    private void JumpGravity()
-    {
         // Jump Gravity
         if (Body2D.velocity.y < 0)
         {
@@ -151,5 +149,26 @@ public class Controller2D : MonoBehaviour
         }
     }
 
-    private void Move(Vector2 _velocity, ForceMode2D _forceMode = default(ForceMode2D)) => Body2D.AddForce(_velocity, _forceMode);
+    private void Turn(bool _isRight)
+    {
+        if (_isRight != facingRight)
+        {
+            Vector3 scale = transform.localScale;
+            scale.x *= -1;
+            transform.localScale = scale;
+
+            facingRight = !facingRight;
+        }
+    }
+
+    private void Drag(float amount)
+    {
+        Vector2 force = amount * Body2D.velocity.normalized;
+        force.x = Mathf.Min(Mathf.Abs(Body2D.velocity.x), Mathf.Abs(force.x));
+        force.y = Mathf.Min(Mathf.Abs(Body2D.velocity.y), Mathf.Abs(force.y));
+        force.x *= Mathf.Sign(Body2D.velocity.x);
+        force.y *= Mathf.Sign(Body2D.velocity.y);
+
+        Body2D.AddForce(-force, ForceMode2D.Impulse);
+    }
 }
