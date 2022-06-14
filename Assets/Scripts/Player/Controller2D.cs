@@ -28,19 +28,19 @@ public class Controller2D : MonoBehaviour
     [SerializeField] private BaseCheck groundCheck;
 
     // Bools
-    bool isGrounded => groundCheck.IsActive();
-    bool isJumping;
-    bool lockHoldPressJumps;
-    bool facingRight;
+    [HideInInspector] public bool _canJump, _keyJump, _cutJump, _startJump, _jumpTimer, _resetHoldPress;
+    [HideInInspector] public bool isJumping;
+    [HideInInspector] public bool isGrounded => groundCheck.IsActive();
+    bool lockHoldPressJumps, facingRight;
 
     // Floats
     float jumpCoutdown = 0.1f;
     float jumpTimer = 0f;
 
     // Components
-    Rigidbody2D Body2D;
-    CapsuleCollider2D BoxCol2D;
-    InputClass Input;
+    [HideInInspector] public Rigidbody2D Body2D;
+    [HideInInspector] public CapsuleCollider2D BoxCol2D;
+    [HideInInspector] public InputClass Input;
 
     private void Start()
     {
@@ -104,8 +104,6 @@ public class Controller2D : MonoBehaviour
     private void UpdateJump()
     {
         // Jump
-        bool _canJump, _keyJump, _cutJump, _startJump, _jumpTimer, _resetHoldPress;
-
         _canJump = isGrounded && jumpTimer <= 0;
         _keyJump = Input.Jump();
         _cutJump = Body2D.velocity.y > 0 && !_keyJump && isJumping;
